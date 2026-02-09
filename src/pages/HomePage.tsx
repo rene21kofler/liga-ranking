@@ -334,7 +334,16 @@ export default function HomePage() {
         className="flex-1 flex flex-col items-center gap-6 p-6"
         {...swipeHandlers}
       >
-        {/* League list above flag */}
+        <Flag country={code} />
+        <h3 className="text-xl font-semibold sm:text-2xl">{label}</h3>
+        {isAdmin && (
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="rounded bg-red-600 px-6 py-3 text-lg font-bold text-white hover:bg-red-700"
+          >
+            {t('league.addNew')}
+          </button>
+        )}
         {countryLeagues.length > 0 && (
           <div className="w-full max-w-sm flex flex-col gap-2">
             {countryLeagues.map((league) => (
@@ -347,17 +356,6 @@ export default function HomePage() {
               </button>
             ))}
           </div>
-        )}
-
-        <Flag country={code} />
-        <h3 className="text-xl font-semibold sm:text-2xl">{label}</h3>
-        {isAdmin && (
-          <button
-            onClick={() => setDialogOpen(true)}
-            className="rounded bg-red-600 px-6 py-3 text-lg font-bold text-white hover:bg-red-700"
-          >
-            {t('league.addNew')}
-          </button>
         )}
       </div>
 
