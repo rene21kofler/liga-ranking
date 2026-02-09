@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import { t } from '../i18n'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -32,18 +33,18 @@ export default function LoginPage() {
     if (error) {
       setError(error.message)
     } else {
-      setMessage('Check your email to confirm your account.')
+      setMessage(t('auth.signupSuccess'))
     }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
-        <h1 className="mb-6 text-2xl font-bold text-center">Liga Ranking</h1>
+        <h1 className="mb-6 text-2xl font-bold text-center">{t('app.title')}</h1>
         <form className="space-y-4">
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t('auth.email')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded border px-4 py-2"
@@ -51,7 +52,7 @@ export default function LoginPage() {
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder={t('auth.password')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded border px-4 py-2"
@@ -65,14 +66,14 @@ export default function LoginPage() {
               disabled={isLoading}
               className="flex-1 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              Log In
+              {t('auth.login')}
             </button>
             <button
               onClick={handleSignUp}
               disabled={isLoading}
               className="flex-1 rounded border border-blue-600 px-4 py-2 text-blue-600 hover:bg-blue-50 disabled:opacity-50"
             >
-              Sign Up
+              {t('auth.signup')}
             </button>
           </div>
         </form>
