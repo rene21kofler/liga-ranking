@@ -49,6 +49,34 @@ export interface Database {
         }
         Relationships: []
       }
+      vote_tokens: {
+        Row: {
+          id: string
+          token: string
+          league_id: string
+          league_name: string
+          email: string
+          ranking: VoteRankingEntry[]
+          confirmed_at: string | null
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          token?: string
+          league_id: string
+          league_name: string
+          email: string
+          ranking: VoteRankingEntry[]
+          confirmed_at?: string | null
+          expires_at?: string
+          created_at?: string
+        }
+        Update: {
+          confirmed_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
