@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         personalizations: [{ to: [{ email }] }],
-        from: { email: 'noreply@ligaranking.app', name: 'Liga Ranking' },
+        from: { email: 'rene.kofler@xibears.com', name: 'Liga Ranking' },
         subject: `Tipp bestätigen – ${league_name}`,
         content: [{ type: 'text/html', value: emailHtml }],
       }),
