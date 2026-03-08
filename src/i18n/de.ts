@@ -38,6 +38,10 @@ const de = {
   'league.editTitle': 'Liga bearbeiten',
   'league.save': 'Speichern',
   'league.notFound': 'Liga nicht gefunden',
+  'league.stats': 'Statistik',
+  'league.statsTitle': 'Aktuelle Wertung',
+  'league.statsEmpty': 'Noch keine bestätigten Tipps vorhanden.',
+  'league.statsVotes': 'Tipps',
 
   // Vote
   'vote.title': 'Deine Prognose',

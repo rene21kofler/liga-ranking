@@ -349,6 +349,91 @@ function VoteForm({
   )
 }
 
+function StatsDialog({
+  leagueId,
+  leagueName,
+  onClose,
+}: {
+  leagueId: string
+  leagueName: string
+  onClose: () => void
+}) {
+  const [rows, setRows] = useState<{ team_name: string; avg: number; votes: number }[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase
+        .from('vote_tokens')
+        .select('ranking')
+        .eq('league_id', leagueId)
+        .not('confirmed_at', 'is', null)
+
+      if (!data || data.length === 0) {
+        setRows([])
+        setLoading(false)
+        return
+      }
+
+      const totals: Record<string, { team_name: string; sum: number; count: number }> = {}
+      for (const token of data) {
+        for (const entry of token.ranking as VoteRankingEntry[]) {
+          if (!totals[entry.team_id]) {
+            totals[entry.team_id] = { team_name: entry.team_name, sum: 0, count: 0 }
+          }
+          totals[entry.team_id].sum += entry.position
+          totals[entry.team_id].count += 1
+        }
+      }
+
+      const aggregated = Object.values(totals)
+        .map((t) => ({ team_name: t.team_name, avg: t.sum / t.count, votes: t.count }))
+        .sort((a, b) => a.avg - b.avg || a.team_name.localeCompare(b.team_name))
+
+      setRows(aggregated)
+      setLoading(false)
+    }
+    load()
+  }, [leagueId])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <h2 className="text-xl font-bold mb-1">{t('league.statsTitle')}</h2>
+        <p className="text-sm text-gray-400 mb-4">{leagueName}</p>
+
+        {loading ? (
+          <p className="text-gray-400 text-sm">{t('common.loading')}</p>
+        ) : rows.length === 0 ? (
+          <p className="text-gray-400 text-sm">{t('league.statsEmpty')}</p>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {rows.map((row, i) => (
+              <div key={row.team_name} className="flex items-center gap-3 rounded-lg bg-gray-50 px-4 py-3">
+                <span className="w-7 h-7 flex items-center justify-center rounded-full bg-red-100 text-red-700 text-sm font-bold shrink-0">
+                  {i + 1}
+                </span>
+                <span className="font-medium text-gray-800 flex-1">{row.team_name}</span>
+                <span className="text-xs text-gray-400">⌀ {row.avg.toFixed(1)} · {row.votes} {t('league.statsVotes')}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          onClick={onClose}
+          className="mt-5 w-full rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+        >
+          {t('common.cancel')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function LeaguePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -357,6 +442,7 @@ export default function LeaguePage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
+  const [statsOpen, setStatsOpen] = useState(false)
 
   const fetchData = useCallback(async () => {
     if (!id) return
@@ -421,6 +507,12 @@ export default function LeaguePage() {
           {t('league.back')}
         </button>
         <h1 className="text-xl font-bold sm:text-2xl flex-1">{league.name}</h1>
+        <button
+          onClick={() => setStatsOpen(true)}
+          className="rounded bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 sm:px-4 sm:py-2 sm:text-base"
+        >
+          {t('league.stats')}
+        </button>
         {isAdmin && (
           <button
             onClick={() => setEditOpen(true)}
@@ -443,6 +535,13 @@ export default function LeaguePage() {
         )}
       </div>
 
+      {statsOpen && (
+        <StatsDialog
+          leagueId={league.id}
+          leagueName={league.name}
+          onClose={() => setStatsOpen(false)}
+        />
+      )}
       {editOpen && (
         <EditLeagueDialog
           league={league}
