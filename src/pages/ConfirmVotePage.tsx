@@ -21,42 +21,38 @@ export default function ConfirmVotePage() {
   }, [token])
 
   async function confirmVote(tokenValue: string) {
-    const { data, error } = await supabase
-      .from('vote_tokens')
-      .select('*')
-      .eq('token', tokenValue)
-      .single()
+    const { data, error } = await supabase.functions.invoke('confirm-vote', {
+      body: { token: tokenValue },
+    })
 
     if (error || !data) {
       setStatus('invalid')
       return
     }
 
-    const record = data as VoteToken
-
-    if (record.confirmed_at) {
-      setVoteToken(record)
-      setStatus('already_confirmed')
-      return
-    }
-
-    if (new Date(record.expires_at) < new Date()) {
-      setStatus('expired')
-      return
-    }
-
-    const { error: updateError } = await supabase
-      .from('vote_tokens')
-      .update({ confirmed_at: new Date().toISOString() })
-      .eq('token', tokenValue)
-
-    if (updateError) {
+    if (data.error === 'invalid') {
       setStatus('invalid')
       return
     }
 
-    setVoteToken(record)
-    setStatus('success')
+    if (data.status === 'expired') {
+      setStatus('expired')
+      return
+    }
+
+    if (data.status === 'already_confirmed') {
+      setVoteToken(data.record as VoteToken)
+      setStatus('already_confirmed')
+      return
+    }
+
+    if (data.status === 'success') {
+      setVoteToken(data.record as VoteToken)
+      setStatus('success')
+      return
+    }
+
+    setStatus('invalid')
   }
 
   if (status === 'loading') {
