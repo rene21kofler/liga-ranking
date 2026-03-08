@@ -14,8 +14,8 @@ function DraggableTeamList({
 }) {
   const dragItem = useRef<number | null>(null)
   const dragOverItem = useRef<number | null>(null)
-  const touchMoveRef = useRef<((e: TouchEvent) => void) | null>(null)
-  const touchEndRef = useRef<(() => void) | null>(null)
+  const teamsRef = useRef(teams)
+  teamsRef.current = teams
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
 
@@ -27,40 +27,26 @@ function DraggableTeamList({
     setDraggingIdx(null)
     setDragOverIdx(null)
     if (from === null || to === null || from === to) return
-    const reordered = [...teams]
+    const reordered = [...teamsRef.current]
     const [moved] = reordered.splice(from, 1)
     reordered.splice(to, 0, moved)
     onReorder(reordered)
   }
 
-  // Desktop
-  function handleDragStart(index: number) {
-    dragItem.current = index
-    setDraggingIdx(index)
-  }
+  function handlePointerDown(e: React.PointerEvent, index: number) {
+    // Only respond to primary pointer (left mouse / first touch)
+    if (e.button !== 0 && e.pointerType === 'mouse') return
 
-  function handleDragOver(e: React.DragEvent, index: number) {
     e.preventDefault()
-    dragOverItem.current = index
-    setDragOverIdx(index)
-  }
-
-  function handleDragEnd() {
-    commit()
-  }
-
-  // Mobile — attach non-passive listeners to document to allow preventDefault
-  function handleTouchStart(_e: React.TouchEvent, index: number) {
     dragItem.current = index
+    dragOverItem.current = index
     setDraggingIdx(index)
 
-    touchMoveRef.current = (ev: TouchEvent) => {
-      ev.preventDefault()
-      const touch = ev.touches[0]
+    const onMove = (ev: PointerEvent) => {
       const elements = document.querySelectorAll('[data-team-index]')
       for (const el of elements) {
         const rect = el.getBoundingClientRect()
-        if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        if (ev.clientY >= rect.top && ev.clientY <= rect.bottom) {
           const idx = Number(el.getAttribute('data-team-index'))
           if (dragOverItem.current !== idx) {
             dragOverItem.current = idx
@@ -71,16 +57,14 @@ function DraggableTeamList({
       }
     }
 
-    touchEndRef.current = () => {
-      document.removeEventListener('touchmove', touchMoveRef.current!)
-      document.removeEventListener('touchend', touchEndRef.current!)
-      touchMoveRef.current = null
-      touchEndRef.current = null
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
       commit()
     }
 
-    document.addEventListener('touchmove', touchMoveRef.current, { passive: false })
-    document.addEventListener('touchend', touchEndRef.current)
+    document.addEventListener('pointermove', onMove)
+    document.addEventListener('pointerup', onUp)
   }
 
   return (
@@ -89,23 +73,25 @@ function DraggableTeamList({
         <div
           key={team.id}
           data-team-index={index}
-          draggable
-          onDragStart={() => handleDragStart(index)}
-          onDragOver={(e) => handleDragOver(e, index)}
-          onDrop={handleDragEnd}
-          onDragEnd={handleDragEnd}
-          onTouchStart={(e) => handleTouchStart(e, index)}
-          className={`flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow cursor-grab active:cursor-grabbing select-none transition-all ${
+          className={`flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow select-none transition-all ${
             draggingIdx === index ? 'opacity-40 scale-95' : ''
           } ${
-            dragOverIdx === index && draggingIdx !== index ? 'border-2 border-red-400' : 'border-2 border-transparent'
+            dragOverIdx === index && draggingIdx !== index
+              ? 'border-2 border-red-400'
+              : 'border-2 border-transparent'
           }`}
         >
           <span className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-sm font-bold shrink-0">
             {index + 1}
           </span>
-          <span className="font-medium">{team.name}</span>
-          <span className="ml-auto text-gray-400">☰</span>
+          <span className="font-medium flex-1">{team.name}</span>
+          <span
+            className="text-gray-400 text-xl px-2 cursor-grab active:cursor-grabbing"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => handlePointerDown(e, index)}
+          >
+            ☰
+          </span>
         </div>
       ))}
     </div>
