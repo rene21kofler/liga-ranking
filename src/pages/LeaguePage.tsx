@@ -14,8 +14,26 @@ function DraggableTeamList({
 }) {
   const dragItem = useRef<number | null>(null)
   const dragOverItem = useRef<number | null>(null)
+  const touchMoveRef = useRef<((e: TouchEvent) => void) | null>(null)
+  const touchEndRef = useRef<(() => void) | null>(null)
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null)
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
 
+  function commit() {
+    const from = dragItem.current
+    const to = dragOverItem.current
+    dragItem.current = null
+    dragOverItem.current = null
+    setDraggingIdx(null)
+    setDragOverIdx(null)
+    if (from === null || to === null || from === to) return
+    const reordered = [...teams]
+    const [moved] = reordered.splice(from, 1)
+    reordered.splice(to, 0, moved)
+    onReorder(reordered)
+  }
+
+  // Desktop
   function handleDragStart(index: number) {
     dragItem.current = index
     setDraggingIdx(index)
@@ -24,44 +42,45 @@ function DraggableTeamList({
   function handleDragOver(e: React.DragEvent, index: number) {
     e.preventDefault()
     dragOverItem.current = index
+    setDragOverIdx(index)
   }
 
-  function handleDrop() {
-    if (dragItem.current === null || dragOverItem.current === null) return
-    if (dragItem.current === dragOverItem.current) {
-      setDraggingIdx(null)
-      return
-    }
-    const reordered = [...teams]
-    const [moved] = reordered.splice(dragItem.current, 1)
-    reordered.splice(dragOverItem.current, 0, moved)
-    dragItem.current = null
-    dragOverItem.current = null
-    setDraggingIdx(null)
-    onReorder(reordered)
+  function handleDragEnd() {
+    commit()
   }
 
+  // Mobile — attach non-passive listeners to document to allow preventDefault
   function handleTouchStart(_e: React.TouchEvent, index: number) {
     dragItem.current = index
     setDraggingIdx(index)
-  }
 
-  function handleTouchMove(e: React.TouchEvent) {
-    if (dragItem.current === null) return
-    const touch = e.touches[0]
-    const elements = document.querySelectorAll('[data-team-index]')
-    for (const el of elements) {
-      const rect = el.getBoundingClientRect()
-      if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-        const idx = Number(el.getAttribute('data-team-index'))
-        dragOverItem.current = idx
-        break
+    touchMoveRef.current = (ev: TouchEvent) => {
+      ev.preventDefault()
+      const touch = ev.touches[0]
+      const elements = document.querySelectorAll('[data-team-index]')
+      for (const el of elements) {
+        const rect = el.getBoundingClientRect()
+        if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          const idx = Number(el.getAttribute('data-team-index'))
+          if (dragOverItem.current !== idx) {
+            dragOverItem.current = idx
+            setDragOverIdx(idx)
+          }
+          break
+        }
       }
     }
-  }
 
-  function handleTouchEnd() {
-    handleDrop()
+    touchEndRef.current = () => {
+      document.removeEventListener('touchmove', touchMoveRef.current!)
+      document.removeEventListener('touchend', touchEndRef.current!)
+      touchMoveRef.current = null
+      touchEndRef.current = null
+      commit()
+    }
+
+    document.addEventListener('touchmove', touchMoveRef.current, { passive: false })
+    document.addEventListener('touchend', touchEndRef.current)
   }
 
   return (
@@ -73,13 +92,13 @@ function DraggableTeamList({
           draggable
           onDragStart={() => handleDragStart(index)}
           onDragOver={(e) => handleDragOver(e, index)}
-          onDrop={handleDrop}
-          onDragEnd={() => setDraggingIdx(null)}
+          onDrop={handleDragEnd}
+          onDragEnd={handleDragEnd}
           onTouchStart={(e) => handleTouchStart(e, index)}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className={`flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow cursor-grab active:cursor-grabbing select-none transition-opacity ${
-            draggingIdx === index ? 'opacity-50' : ''
+          className={`flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow cursor-grab active:cursor-grabbing select-none transition-all ${
+            draggingIdx === index ? 'opacity-40 scale-95' : ''
+          } ${
+            dragOverIdx === index && draggingIdx !== index ? 'border-2 border-red-400' : 'border-2 border-transparent'
           }`}
         >
           <span className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-sm font-bold shrink-0">
