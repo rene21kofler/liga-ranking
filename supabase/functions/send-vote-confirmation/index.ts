@@ -27,20 +27,25 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Check if this email already has a confirmed vote for this league
+    // Block if already confirmed OR if a pending token still exists
     const { data: existing } = await supabase
       .from('vote_tokens')
-      .select('id')
+      .select('id, confirmed_at, expires_at')
       .eq('email', email)
       .eq('league_id', league_id)
-      .not('confirmed_at', 'is', null)
       .maybeSingle()
 
     if (existing) {
-      return new Response(JSON.stringify({ error: 'already_voted' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      const isConfirmed = existing.confirmed_at !== null
+      const isExpired = new Date(existing.expires_at) < new Date()
+      if (isConfirmed || !isExpired) {
+        return new Response(JSON.stringify({ error: 'already_voted' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      // Token expired and unconfirmed — delete it so a fresh one can be created
+      await supabase.from('vote_tokens').delete().eq('id', existing.id)
     }
 
     // Create vote token in DB

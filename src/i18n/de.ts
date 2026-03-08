@@ -46,7 +46,7 @@ const de = {
   'vote.emailPlaceholder': 'mail@beispiel.at',
   'vote.submit': 'Tipp absenden',
   'vote.successTitle': 'Tipp abgeschickt!',
-  'vote.successMessage': 'Bitte bestätige deinen Tipp per E-Mail.',
+  'vote.successMessage': 'Bitte bestätige deinen Tipp per E-Mail. Falls du keine E-Mail erhältst, prüfe bitte deinen Spam-Ordner.',
   'vote.errorSend': 'Fehler beim Absenden. Bitte erneut versuchen.',
   'vote.errorAlreadyVoted': 'Du hast für diese Liga bereits abgestimmt.',
 
