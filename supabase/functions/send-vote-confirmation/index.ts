@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (dbError || !voteToken) {
+      console.error('DB insert error:', JSON.stringify(dbError))
       return new Response(JSON.stringify({ error: dbError?.message ?? 'DB error' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
