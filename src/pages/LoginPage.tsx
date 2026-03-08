@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { t } from '../i18n'
+import logo from '../assets/logo.png'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -40,7 +41,10 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
-        <h1 className="mb-6 text-2xl font-bold text-center">{t('app.title')}</h1>
+        <div className="flex flex-col items-center gap-2 mb-6">
+          <img src={logo} alt="Logo" className="h-16 object-contain" />
+          <h1 className="text-2xl font-bold text-center">{t('app.title')}</h1>
+        </div>
         <form className="space-y-4">
           <input
             type="email"

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { t } from '../i18n'
-import type { League, Team } from '../lib/database.types'
+import type { League, Team, VoteRankingEntry } from '../lib/database.types'
 
 function DraggableTeamList({
   teams,
@@ -273,10 +273,81 @@ function EditLeagueDialog({
   )
 }
 
+function VoteForm({
+  teams,
+  league,
+}: {
+  teams: Team[]
+  league: League
+}) {
+  const [email, setEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit() {
+    if (!email.trim()) return
+    setSubmitting(true)
+    setError(null)
+
+    const ranking: VoteRankingEntry[] = teams.map((team, index) => ({
+      team_id: team.id,
+      team_name: team.name,
+      position: index + 1,
+    }))
+
+    const { error: fnError } = await supabase.functions.invoke('send-vote-confirmation', {
+      body: { league_id: league.id, league_name: league.name, email: email.trim(), ranking },
+    })
+
+    setSubmitting(false)
+    if (fnError) {
+      setError(t('vote.errorSend'))
+      return
+    }
+    setSubmitted(true)
+  }
+
+  if (submitted) {
+    return (
+      <div className="w-full max-w-md rounded-lg bg-green-50 border border-green-200 p-6 text-center">
+        <p className="text-2xl mb-2">✉️</p>
+        <h3 className="font-bold text-green-800 text-lg">{t('vote.successTitle')}</h3>
+        <p className="text-green-700 text-sm mt-1">{t('vote.successMessage')}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-md rounded-lg bg-white shadow p-5">
+      <h3 className="font-semibold text-gray-700 mb-1">{t('vote.title')}</h3>
+      <p className="text-sm text-gray-400 mb-4">{t('vote.hint')}</p>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {t('vote.emailLabel')}
+      </label>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder={t('vote.emailPlaceholder')}
+        className="w-full rounded border px-3 py-2 mb-3 text-sm"
+      />
+      {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+      <button
+        onClick={handleSubmit}
+        disabled={!email.trim() || submitting}
+        className="w-full rounded bg-red-600 px-4 py-2 text-white font-medium hover:bg-red-700 disabled:opacity-50"
+      >
+        {submitting ? t('common.loading') : t('vote.submit')}
+      </button>
+    </div>
+  )
+}
+
 export default function LeaguePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [league, setLeague] = useState<League | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
@@ -308,6 +379,8 @@ export default function LeaguePage() {
   async function handleReorder(reordered: Team[]) {
     setTeams(reordered)
 
+    if (!isAdmin) return
+
     const updates = reordered.map((team, index) =>
       supabase
         .from('teams')
@@ -328,7 +401,7 @@ export default function LeaguePage() {
   if (!league) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">Liga nicht gefunden</p>
+        <p className="text-gray-500">{t('league.notFound')}</p>
       </div>
     )
   }
@@ -359,6 +432,9 @@ export default function LeaguePage() {
           <DraggableTeamList teams={teams} onReorder={handleReorder} />
         ) : (
           <p className="text-gray-400">{t('league.noTeams')}</p>
+        )}
+        {!user && league && teams.length > 0 && (
+          <VoteForm teams={teams} league={league} />
         )}
       </div>
 

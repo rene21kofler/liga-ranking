@@ -59,3 +59,21 @@ export interface Database {
 
 export type League = Database['public']['Tables']['leagues']['Row']
 export type Team = Database['public']['Tables']['teams']['Row']
+
+export interface VoteRankingEntry {
+  team_id: string
+  team_name: string
+  position: number
+}
+
+export interface VoteToken {
+  id: string
+  token: string
+  league_id: string
+  league_name: string
+  email: string
+  ranking: VoteRankingEntry[]
+  confirmed_at: string | null
+  created_at: string
+  expires_at: string
+}

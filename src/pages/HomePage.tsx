@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { t } from '../i18n'
 import type { League } from '../lib/database.types'
+import logo from '../assets/logo.png'
 
 function Flag({ country }: { country: 'de' | 'at' | 'ch' }) {
   if (country === 'de') {
@@ -284,7 +285,10 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <header className="flex items-center justify-between px-4 py-3 bg-white shadow sm:px-8 sm:py-4">
-        <h1 className="text-xl font-bold sm:text-2xl">{t('app.title')}</h1>
+        <div className="flex items-center gap-2">
+          <img src={logo} alt="Logo" className="h-8 sm:h-10 object-contain" />
+          <h1 className="text-xl font-bold sm:text-2xl">{t('app.title')}</h1>
+        </div>
         {!user ? (
           <button
             onClick={() => navigate('/login')}

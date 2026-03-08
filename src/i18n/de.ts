@@ -37,6 +37,27 @@ const de = {
   'league.edit': 'Bearbeiten',
   'league.editTitle': 'Liga bearbeiten',
   'league.save': 'Speichern',
+  'league.notFound': 'Liga nicht gefunden',
+
+  // Vote
+  'vote.title': 'Deine Prognose',
+  'vote.hint': 'Sortiere die Teams nach deiner Erwartung und sende deinen Tipp ab.',
+  'vote.emailLabel': 'Deine E-Mail-Adresse',
+  'vote.emailPlaceholder': 'mail@beispiel.at',
+  'vote.submit': 'Tipp absenden',
+  'vote.successTitle': 'Tipp abgeschickt!',
+  'vote.successMessage': 'Bitte bestätige deinen Tipp per E-Mail.',
+  'vote.errorSend': 'Fehler beim Absenden. Bitte erneut versuchen.',
+
+  // Confirm
+  'confirm.loading': 'Tipp wird bestätigt...',
+  'confirm.successTitle': 'Tipp bestätigt!',
+  'confirm.successMessage': 'Deine Prognose wurde erfolgreich gespeichert.',
+  'confirm.alreadyConfirmed': 'Dieser Tipp wurde bereits bestätigt.',
+  'confirm.expired': 'Dieser Bestätigungslink ist abgelaufen.',
+  'confirm.invalid': 'Ungültiger Link.',
+  'confirm.ranking': 'Deine Prognose',
+  'confirm.backHome': 'Zur Startseite',
 } as const
 
 export default de
