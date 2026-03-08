@@ -27,6 +27,22 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Check if this email already has a confirmed vote for this league
+    const { data: existing } = await supabase
+      .from('vote_tokens')
+      .select('id')
+      .eq('email', email)
+      .eq('league_id', league_id)
+      .not('confirmed_at', 'is', null)
+      .maybeSingle()
+
+    if (existing) {
+      return new Response(JSON.stringify({ error: 'already_voted' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Create vote token in DB
     const { data: voteToken, error: dbError } = await supabase
       .from('vote_tokens')

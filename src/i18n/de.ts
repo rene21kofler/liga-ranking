@@ -48,6 +48,7 @@ const de = {
   'vote.successTitle': 'Tipp abgeschickt!',
   'vote.successMessage': 'Bitte bestätige deinen Tipp per E-Mail.',
   'vote.errorSend': 'Fehler beim Absenden. Bitte erneut versuchen.',
+  'vote.errorAlreadyVoted': 'Du hast für diese Liga bereits abgestimmt.',
 
   // Confirm
   'confirm.loading': 'Tipp wird bestätigt...',

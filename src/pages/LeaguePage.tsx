@@ -296,13 +296,18 @@ function VoteForm({
       position: index + 1,
     }))
 
-    const { error: fnError } = await supabase.functions.invoke('send-vote-confirmation', {
+    const { error: fnError, data: fnData } = await supabase.functions.invoke('send-vote-confirmation', {
       body: { league_id: league.id, league_name: league.name, email: email.trim(), ranking },
     })
 
     setSubmitting(false)
     if (fnError) {
       setError(t('vote.errorSend'))
+      return
+    }
+    const body = fnData as { error?: string } | null
+    if (body?.error === 'already_voted') {
+      setError(t('vote.errorAlreadyVoted'))
       return
     }
     setSubmitted(true)
